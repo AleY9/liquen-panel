@@ -1,5 +1,5 @@
 === Liquen Panel ===
-Versión: 1.0.7 · Requiere: WordPress 6.4+, PHP 8.0+, Advanced Custom Fields (gratis)
+Versión: 1.0.8 · Requiere: WordPress 6.4+, PHP 8.0+, Advanced Custom Fields (gratis)
 
 Back office en el front para cargar contenidos desde el celular, sin wp-admin.
 
@@ -23,6 +23,10 @@ Back office en el front para cargar contenidos desde el celular, sin wp-admin.
 * Acceso: administradores y los roles elegidos; cada uno ve lo que WordPress le deja editar.
 
 == Cambios ==
+1.0.8
+* Actualizaciones automáticas desde GitHub: cuando hay una versión nueva aparece el aviso normal
+  en Plugins y se actualiza con un clic (o sola, con «Activar actualizaciones automáticas»).
+
 1.0.7
 * Celular: en la galería, botones más compactos («Subir», «Biblioteca», «Quitar») que no se parten en dos líneas,
   aun con letra grande; casillas vacías del mismo alto que las llenas.
@@ -69,5 +73,4 @@ Back office en el front para cargar contenidos desde el celular, sin wp-admin.
 * Sin el «·» al principio del resumen en «Mis …».
 
 == Pendiente (próximas versiones) ==
-Modo Bricks (1.1), modo con aprobación y fichas madre/hijas (Caminos Locales), colores tomados de Bricks,
-actualización automática desde GitHub.
+Modo Bricks (1.1), modo con aprobación y fichas madre/hijas (Caminos Locales), colores tomados de Bricks.
