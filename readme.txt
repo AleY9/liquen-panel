@@ -1,5 +1,5 @@
 === Liquen Panel ===
-Versión: 1.0.8 · Requiere: WordPress 6.4+, PHP 8.0+, Advanced Custom Fields (gratis)
+Versión: 1.0.9 · Requiere: WordPress 6.4+, PHP 8.0+, Advanced Custom Fields (gratis)
 
 Back office en el front para cargar contenidos desde el celular, sin wp-admin.
 
@@ -23,6 +23,13 @@ Back office en el front para cargar contenidos desde el celular, sin wp-admin.
 * Acceso: administradores y los roles elegidos; cada uno ve lo que WordPress le deja editar.
 
 == Cambios ==
+1.0.9
+* Exportar / importar ajustes (Ajustes → Liquen Panel, abajo): descarga un .json con toda la configuración
+  y lo carga en otro sitio. Los campos de ACF se buscan por nombre; avisa lo que no existe en el sitio nuevo.
+* Aviso de campos nuevos de ACF: si a un tipo activo se le agrega un campo en ACF y no se revisó en los ajustes,
+  aparece un aviso (Escritorio, Plugins, ACF y Ajustes) y la marca «nuevo» junto al campo. Se va al guardar.
+* Protección de pestaña vieja: si los ajustes cambiaron después de abrir la página, no se guardan y se avisa.
+
 1.0.8
 * Actualizaciones automáticas desde GitHub: cuando hay una versión nueva aparece el aviso normal
   en Plugins y se actualiza con un clic (o sola, con «Activar actualizaciones automáticas»).
