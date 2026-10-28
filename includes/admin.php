@@ -28,7 +28,15 @@ add_action( 'admin_notices', function () {
 } );
 
 function lp_admin_limpiar( $in ) {
-	$in  = is_array( $in ) ? $in : array();
+	$in = is_array( $in ) ? $in : array();
+
+	// Formulario abierto antes del último cambio (otra pestaña u otra persona): no se pisa nada.
+	if ( isset( $in['_rev'] ) && (string) $in['_rev'] !== lp_ajustes_rev() ) {
+		add_settings_error( 'lp_ajustes', 'lp_rev', 'No se guardó nada: los ajustes cambiaron desde que abriste esta página (en otra pestaña o por otra persona). Recargá la página y volvé a hacer tus cambios.' );
+		$actual = get_option( 'lp_ajustes', array() );
+		return is_array( $actual ) ? $actual : array();
+	}
+
 	$def = lp_config_defecto();
 	$out = array();
 
@@ -90,6 +98,8 @@ function lp_admin_limpiar( $in ) {
 			'al_menos_msg' => sanitize_text_field( $t['al_menos_msg'] ?? '' ),
 			'orden'        => max( 1, min( 99, (int) ( $t['orden'] ?? 10 ) ) ),
 			'tax_unica'    => array_values( array_intersect( (array) ( $t['tax_unica'] ?? array() ), $taxs ) ),
+			// Campos de ACF que ya se vieron al guardar (para avisar de los nuevos). Desde el formulario: todos los de ahora.
+			'conocidos'    => isset( $t['conocidos'] ) ? array_values( array_intersect( (array) $t['conocidos'], $keys ) ) : $keys,
 		);
 		$tt = &$out['tipos'][ $slug ];
 		if ( '' === $tt['singular'] ) {
@@ -135,6 +145,7 @@ function lp_admin_pagina() {
 	$guardado = get_option( 'lp_ajustes', array() );
 	$tipos_g  = isset( $guardado['tipos'] ) && is_array( $guardado['tipos'] ) ? $guardado['tipos'] : array();
 	$n        = 'lp_ajustes';
+	$nuevos   = lp_campos_nuevos();
 	?>
 	<div class="wrap lp-admin">
 		<h1>Liquen Panel</h1>
@@ -154,6 +165,7 @@ function lp_admin_pagina() {
 		</style>
 		<form method="post" action="options.php">
 			<?php settings_fields( 'lp_ajustes_grupo' ); ?>
+			<input type="hidden" name="<?php echo esc_attr( $n ); ?>[_rev]" value="<?php echo esc_attr( lp_ajustes_rev() ); ?>">
 
 			<div class="lp-box">
 				<h2>General</h2>
@@ -252,7 +264,7 @@ function lp_admin_pagina() {
 						<?php else : ?>
 							<p class="lp-cols">
 								<?php foreach ( $campos as $k => $f ) : $ok = lp_campo_soportado( $f ); ?>
-									<label class="<?php echo $ok ? '' : 'lp-off'; ?>"><input type="checkbox" name="<?php echo esc_attr( $pre ); ?>[campos][]" value="<?php echo esc_attr( $k ); ?>" <?php checked( $ok && in_array( $k, (array) $t['campos'], true ) ); ?> <?php disabled( ! $ok ); ?>> <?php echo esc_html( $f['label'] ); ?> <small>(<?php echo esc_html( lp_es_galeria( $f ) ? 'galería' : $f['type'] ); ?><?php echo $ok ? '' : ', no soportado'; ?>)</small></label>
+									<label class="<?php echo $ok ? '' : 'lp-off'; ?>"><input type="checkbox" name="<?php echo esc_attr( $pre ); ?>[campos][]" value="<?php echo esc_attr( $k ); ?>" <?php checked( $ok && in_array( $k, (array) $t['campos'], true ) ); ?> <?php disabled( ! $ok ); ?>> <?php echo esc_html( $f['label'] ); ?> <small>(<?php echo esc_html( lp_es_galeria( $f ) ? 'galería' : $f['type'] ); ?><?php echo $ok ? '' : ', no soportado'; ?>)</small><?php echo isset( $nuevos[ $slug ][ $k ] ) ? ' <strong style="color:#b32d2e">nuevo</strong>' : ''; ?></label>
 								<?php endforeach; ?>
 							</p>
 						<?php endif; ?>
@@ -277,6 +289,7 @@ function lp_admin_pagina() {
 
 			<?php submit_button( 'Guardar ajustes' ); ?>
 		</form>
+		<?php lp_ajustes_caja(); ?>
 		<?php lp_kit_caja(); ?>
 	</div>
 	<script>
