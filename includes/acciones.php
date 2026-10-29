@@ -39,6 +39,9 @@ function lp_puede_crear( $slug ) {
 }
 
 function lp_manejar_post() {
+	if ( lp_modulo_manejar_post() ) {
+		return; // Era de un complemento (ya se revisó nonce, permiso y límite).
+	}
 	$accion = isset( $_POST['lp_accion'] ) ? sanitize_key( wp_unslash( $_POST['lp_accion'] ) ) : ''; // phpcs:ignore WordPress.Security
 	$slug   = isset( $_POST['lp_t'] ) ? sanitize_key( wp_unslash( $_POST['lp_t'] ) ) : ''; // phpcs:ignore WordPress.Security
 	$id     = isset( $_POST['lp_id'] ) ? (int) $_POST['lp_id'] : 0; // phpcs:ignore WordPress.Security

@@ -289,6 +289,7 @@ function lp_admin_pagina() {
 
 			<?php submit_button( 'Guardar ajustes' ); ?>
 		</form>
+		<?php lp_modulos_caja(); ?>
 		<?php lp_ajustes_caja(); ?>
 		<?php lp_kit_caja(); ?>
 	</div>

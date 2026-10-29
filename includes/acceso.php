@@ -147,7 +147,7 @@ add_action( 'template_redirect', function () {
 // Dirección actual del panel con sus parámetros (para volver después del login).
 function lp_url_actual() {
 	$args = array();
-	foreach ( array( 'v', 't', 'id' ) as $k ) {
+	foreach ( array( 'm', 'v', 't', 'id' ) as $k ) {
 		if ( isset( $_GET[ $k ] ) ) { // phpcs:ignore WordPress.Security
 			$args[ $k ] = sanitize_key( wp_unslash( $_GET[ $k ] ) ); // phpcs:ignore WordPress.Security
 		}

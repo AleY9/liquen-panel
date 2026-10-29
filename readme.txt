@@ -1,5 +1,5 @@
 === Liquen Panel ===
-Versión: 1.0.10 · Requiere: WordPress 6.4+, PHP 8.0+, Advanced Custom Fields (gratis)
+Versión: 1.1.0 · Requiere: WordPress 6.4+, PHP 8.0+, Advanced Custom Fields (gratis)
 
 Back office en el front para cargar contenidos desde el celular, sin wp-admin.
 
@@ -22,7 +22,20 @@ Back office en el front para cargar contenidos desde el celular, sin wp-admin.
 * Textos con formato especial (listas, negritas, bloques) no se tocan: se editan en wp-admin.
 * Acceso: administradores y los roles elegidos; cada uno ve lo que WordPress le deja editar.
 
+== Complementos ==
+Otros plugins (por ejemplo, Liquen Calendarios) pueden sumar su sección al panel con lp_registrar_modulo():
+aparecen en el inicio junto a los tipos de contenido, con el mismo acceso, colores y avisos.
+Cómo se registra uno: ver el comentario al principio de includes/modulos.php.
+En Ajustes → Liquen Panel, la caja «Complementos en el panel» muestra cuáles están enganchados.
+
 == Cambios ==
+1.1.0
+* Registro de módulos: los complementos se suman al panel como una sección más del inicio (con su número de orden,
+  entre los tipos de contenido), con pantallas propias en /panel/?m=…, formularios protegidos por el núcleo
+  (sesión, permiso, nonce y límite de envíos) y avisos después de guardar.
+* El acceso general no cambia: un complemento solo puede restringir más (por ejemplo, solo editores), nunca ampliar.
+* Ajustes → Liquen Panel: caja «Complementos en el panel».
+
 1.0.10
 * El panel ya no se cae si el servidor no tiene la extensión mbstring de PHP (pasa al cambiar de versión de PHP
   con pocas extensiones): usa reemplazos propios para mayúsculas y minúsculas con tildes y eñes.

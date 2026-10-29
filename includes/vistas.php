@@ -46,6 +46,7 @@ function lp_render_documento( $titulo, $cuerpo ) {
 <?php if ( '' !== trim( (string) $c['fuente_url'] ) && preg_match( '#^https://fonts\.(googleapis|bunny)\.(com|net)/#', $c['fuente_url'] ) ) : ?><link rel="stylesheet" href="<?php echo esc_url( $c['fuente_url'] ); ?>"><?php endif; ?>
 <link rel="stylesheet" href="<?php echo esc_url( LP_URL . 'assets/panel.css?v=' . LP_VERSION ); ?>">
 <style>:root{<?php echo esc_html( implode( ';', $vars ) ); ?>}</style>
+<?php echo lp_modulo_assets( 'css' ); // phpcs:ignore WordPress.Security -- escapado en lp_modulo_assets ?>
 </head>
 <body>
 <header class="lp-barra">
@@ -60,6 +61,7 @@ function lp_render_documento( $titulo, $cuerpo ) {
 </main>
 <script>window.LP=<?php echo wp_json_encode( $js ); ?>;</script>
 <script src="<?php echo esc_url( LP_URL . 'assets/panel.js?v=' . LP_VERSION ); ?>"></script>
+<?php echo lp_modulo_assets( 'js' ); // phpcs:ignore WordPress.Security -- escapado en lp_modulo_assets ?>
 </body>
 </html>
 	<?php
@@ -74,6 +76,14 @@ function lp_render() {
 		$slug = sanitize_key( wp_unslash( $_POST['lp_t'] ) ); // phpcs:ignore WordPress.Security
 		$id   = isset( $_POST['lp_id'] ) ? (int) $_POST['lp_id'] : 0; // phpcs:ignore WordPress.Security
 		$v    = $id ? 'editar' : 'nuevo';
+	}
+	// Pantallas de los complementos (?m=…). Si el módulo no existe o no se puede usar, se muestra el inicio.
+	$mod = isset( $_GET['m'] ) ? sanitize_key( wp_unslash( $_GET['m'] ) ) : ''; // phpcs:ignore WordPress.Security
+	if ( 'POST' === $_SERVER['REQUEST_METHOD'] && isset( $_POST['lp_m'] ) ) { // phpcs:ignore WordPress.Security
+		$mod = sanitize_key( wp_unslash( $_POST['lp_m'] ) ); // phpcs:ignore WordPress.Security
+	}
+	if ( '' !== $mod && lp_modulo_render( $mod ) ) {
+		return;
 	}
 	$tipo = lp_tipo( $slug );
 	if ( $tipo && 'lista' === $v ) {
@@ -113,9 +123,21 @@ function lp_aviso_msg( $tipo = null ) {
 		$h .= '<div class="lp-aviso lp-aviso-error" role="alert">' . lp_e( $mal[ $m ] ) . '</div>';
 	}
 	if ( ! empty( $GLOBALS['lp_estado']['aviso'] ) ) {
-		$h .= '<div class="lp-aviso lp-aviso-error" role="alert">' . lp_e( $GLOBALS['lp_estado']['aviso'] ) . '</div>';
+		$h .= lp_aviso_html( $GLOBALS['lp_estado']['aviso'], ! empty( $GLOBALS['lp_estado']['ok'] ) );
+	}
+	// Aviso de un módulo después de redirigir (se muestra una sola vez).
+	$flash = is_user_logged_in() ? get_transient( 'lp_flash_' . get_current_user_id() ) : false;
+	if ( is_array( $flash ) && ! empty( $flash['aviso'] ) ) {
+		delete_transient( 'lp_flash_' . get_current_user_id() );
+		$h .= lp_aviso_html( $flash['aviso'], ! empty( $flash['ok'] ) );
 	}
 	return $h;
+}
+
+function lp_aviso_html( $texto, $ok ) {
+	return $ok
+		? '<div class="lp-aviso lp-aviso-ok" role="status">' . lp_e( $texto ) . '</div>'
+		: '<div class="lp-aviso lp-aviso-error" role="alert">' . lp_e( $texto ) . '</div>';
 }
 
 function lp_vista_sin_acceso() {
@@ -130,12 +152,31 @@ function lp_vista_inicio() {
 	$u  = wp_get_current_user();
 	$h  = lp_aviso_msg();
 	$h .= '<h1 class="lp-h1">Hola, ' . lp_e( $u->first_name ? $u->first_name : $u->display_name ) . '</h1>';
-	$tipos = lp_tipos_activos();
-	if ( ! $tipos ) {
+	$tipos   = lp_tipos_activos();
+	$modulos = lp_modulos_activos();
+	if ( ! $tipos && ! $modulos ) {
 		$h .= '<div class="lp-card">Todavía no hay nada para cargar desde el panel. ' . ( current_user_can( 'manage_options' ) ? '<a href="' . esc_url( admin_url( 'options-general.php?page=liquen-panel' ) ) . '">Configurarlo</a>.' : '' ) . '</div>';
 		return $h;
 	}
+	// Tipos y módulos juntos, por su número de orden (a igual número, primero los tipos).
+	$items = array();
+	$i     = 0;
 	foreach ( $tipos as $slug => $t ) {
+		$items[] = array( 'orden' => (int) $t['orden'], 'i' => $i++, 'tipo' => $slug );
+	}
+	foreach ( $modulos as $m ) {
+		$items[] = array( 'orden' => (int) $m['orden'], 'i' => $i++, 'modulo' => $m );
+	}
+	usort( $items, function ( $a, $b ) {
+		return ( $a['orden'] <=> $b['orden'] ) ?: ( $a['i'] <=> $b['i'] );
+	} );
+	foreach ( $items as $item ) {
+		if ( isset( $item['modulo'] ) ) {
+			$h .= lp_modulo_tarjeta( $item['modulo'] );
+			continue;
+		}
+		$slug = $item['tipo'];
+		$t    = $tipos[ $slug ];
 		$ids  = lp_contenidos( $slug );
 		$grp  = lp_agrupar( $slug, $ids );
 		$h   .= '<section class="lp-card lp-tipo">';
