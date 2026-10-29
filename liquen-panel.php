@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Liquen Panel
  * Description:       Back office en el front para cargar y editar contenidos (entradas y tipos de contenido con campos ACF) desde el celular, sin entrar a wp-admin.
- * Version:           1.0.9
+ * Version:           1.0.10
  * Requires at least: 6.4
  * Requires PHP:      8.0
  * Author:            Liquen Web
@@ -16,11 +16,12 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'LP_VERSION', '1.0.9' );
+define( 'LP_VERSION', '1.0.10' );
 define( 'LP_FILE', __FILE__ );
 define( 'LP_DIR', plugin_dir_path( __FILE__ ) );
 define( 'LP_URL', plugin_dir_url( __FILE__ ) );
 
+require_once LP_DIR . 'includes/compat.php';
 require_once LP_DIR . 'includes/config.php';
 require_once LP_DIR . 'includes/campos.php';
 require_once LP_DIR . 'includes/acceso.php';
@@ -40,6 +41,9 @@ function lp_activar() {
 	if ( ! wp_next_scheduled( 'lp_limpieza_fotos' ) ) {
 		wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', 'lp_limpieza_fotos' );
 	}
+	// Que WordPress vuelva a preguntar por actualizaciones: así aparece enseguida
+	// el enlace «Activar actualizaciones automáticas».
+	delete_site_transient( 'update_plugins' );
 }
 
 function lp_desactivar() {
