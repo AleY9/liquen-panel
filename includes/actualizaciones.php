@@ -8,6 +8,8 @@
  *
  * Se usa el zip adjunto a la release (liquen-panel.zip, lo arma GitHub Actions), que trae
  * la carpeta con el nombre correcto. Si la release no tiene ese zip, no se ofrece nada.
+ * Si la API de GitHub no responde (límite por IP en hostings compartidos), se usa una
+ * segunda vía sin la API.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -54,9 +56,46 @@ function lp_ultima_release() {
 		}
 	}
 
-	// Se guarda '' cuando no hay datos, para no consultar GitHub en cada carga.
-	set_site_transient( 'lp_ultima_release', $datos ?: '', $datos ? 6 * HOUR_IN_SECONDS : HOUR_IN_SECONDS );
+	// Segunda vía, sin la API: github.com/…/releases/latest redirige a la última etiqueta.
+	// La API limita las consultas por IP y en hostings compartidos se agota seguido.
+	if ( ! $datos ) {
+		$datos = lp_ultima_release_sin_api();
+	}
+
+	// Se guarda '' cuando no hay datos, para no consultar GitHub en cada carga (15 min y se reintenta).
+	set_site_transient( 'lp_ultima_release', $datos ?: '', $datos ? 6 * HOUR_IN_SECONDS : 15 * MINUTE_IN_SECONDS );
 	return $datos;
+}
+
+function lp_ultima_release_sin_api() {
+	$resp = wp_remote_head(
+		'https://github.com/' . LP_GITHUB_REPO . '/releases/latest',
+		array(
+			'timeout'     => 10,
+			'redirection' => 0,
+			'headers'     => array( 'User-Agent' => 'Liquen-Panel/' . LP_VERSION . '; ' . home_url() ),
+		)
+	);
+	if ( is_wp_error( $resp ) ) {
+		return null;
+	}
+	$destino = (string) wp_remote_retrieve_header( $resp, 'location' );
+	if ( ! preg_match( '#/releases/tag/(v?[0-9][0-9.]*)$#', $destino, $m ) ) {
+		return null;
+	}
+	$zip = 'https://github.com/' . LP_GITHUB_REPO . '/releases/download/' . $m[1] . '/' . LP_GITHUB_ZIP;
+	// El zip lo arma GitHub un minuto después de publicar: si todavía no está, no se ofrece nada.
+	$hay = wp_remote_head( $zip, array( 'timeout' => 10, 'redirection' => 0 ) );
+	if ( is_wp_error( $hay ) || ! in_array( (int) wp_remote_retrieve_response_code( $hay ), array( 200, 302 ), true ) ) {
+		return null;
+	}
+	return array(
+		'version' => ltrim( $m[1], 'vV' ),
+		'zip'     => $zip,
+		'notas'   => '',
+		'url'     => 'https://github.com/' . LP_GITHUB_REPO . '/releases/tag/' . $m[1],
+		'fecha'   => '',
+	);
 }
 
 // Datos del plugin en el formato que espera WordPress.

@@ -41,6 +41,28 @@ function lp_campos_nuevos() {
 	return $out;
 }
 
+// Ajustes de antes de la 1.0.9 no tienen la lista de campos ya vistos, y sin ella no hay aviso.
+// Una vez por versión: se completa con los campos de ahora (igual que al guardar el formulario).
+add_action( 'admin_init', function () {
+	if ( get_option( 'lp_version_datos' ) === LP_VERSION || ! function_exists( 'acf_get_field_groups' ) || ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+	$g      = get_option( 'lp_ajustes', array() );
+	$cambio = false;
+	if ( is_array( $g ) ) {
+		foreach ( (array) ( $g['tipos'] ?? array() ) as $slug => $t ) {
+			if ( ! isset( $t['conocidos'] ) && post_type_exists( $slug ) ) {
+				$g['tipos'][ $slug ]['conocidos'] = array_keys( lp_campos_acf_de_tipo( $slug ) );
+				$cambio                           = true;
+			}
+		}
+	}
+	if ( $cambio ) {
+		update_option( 'lp_ajustes', $g );
+	}
+	update_option( 'lp_version_datos', LP_VERSION, false );
+} );
+
 add_action( 'admin_notices', function () {
 	if ( ! current_user_can( 'manage_options' ) || ! function_exists( 'acf_get_field_groups' ) ) {
 		return;
@@ -91,6 +113,8 @@ add_action( 'admin_post_lp_exportar', function () {
 		'fecha'          => gmdate( 'c' ),
 		'ajustes'        => $ajustes,
 		'campos_nombres' => $nombres,
+		// El ícono es un ID de la biblioteca de este sitio: va también su dirección, para traerlo a otro.
+		'icono_url'      => ! empty( $ajustes['icono'] ) ? (string) wp_get_attachment_url( (int) $ajustes['icono'] ) : '',
 	);
 
 	$host = sanitize_file_name( (string) wp_parse_url( home_url(), PHP_URL_HOST ) );
@@ -102,6 +126,43 @@ add_action( 'admin_post_lp_exportar', function () {
 } );
 
 /* ---------- Importar ---------- */
+
+// ¿El ID del ícono es la misma imagen en este sitio? (Si la dirección coincide, o si no hay dirección para comparar.)
+function lp_icono_es_del_sitio( $id, $url ) {
+	if ( ! wp_attachment_is_image( $id ) ) {
+		return false;
+	}
+	return '' === $url || wp_get_attachment_url( $id ) === $url;
+}
+
+// Baja el ícono de otro sitio a la biblioteca de este. Devuelve el ID nuevo o 0.
+function lp_traer_icono( $url ) {
+	$url = esc_url_raw( $url );
+	if ( '' === $url || ! preg_match( '#^https?://#i', $url ) || ! preg_match( '#\.(png|jpe?g|webp|gif)$#i', (string) wp_parse_url( $url, PHP_URL_PATH ) ) ) {
+		return 0;
+	}
+	// Si ya se trajo antes (otra importación), se reusa.
+	$antes = get_posts( array(
+		'post_type'      => 'attachment',
+		'posts_per_page' => 1,
+		'fields'         => 'ids',
+		'meta_key'       => '_lp_icono_origen', // phpcs:ignore WordPress.DB.SlowDBQuery
+		'meta_value'     => $url, // phpcs:ignore WordPress.DB.SlowDBQuery
+	) );
+	if ( $antes && wp_attachment_is_image( (int) $antes[0] ) ) {
+		return (int) $antes[0];
+	}
+	require_once ABSPATH . 'wp-admin/includes/media.php';
+	require_once ABSPATH . 'wp-admin/includes/file.php';
+	require_once ABSPATH . 'wp-admin/includes/image.php';
+	$id = media_sideload_image( $url, 0, 'Ícono del panel', 'id' );
+	if ( is_wp_error( $id ) ) {
+		return 0;
+	}
+	update_post_meta( (int) $id, '_lp_icono_origen', $url );
+	return (int) $id;
+}
+
 
 add_action( 'admin_post_lp_importar', function () {
 	if ( ! current_user_can( 'manage_options' ) ) {
@@ -120,7 +181,7 @@ add_action( 'admin_post_lp_importar', function () {
 	if ( ! is_array( $datos ) || empty( $datos['liquen_panel'] ) || ! isset( $datos['ajustes'] ) || ! is_array( $datos['ajustes'] ) ) {
 		$res['avisos'][] = 'El archivo no es una exportación de Liquen Panel. No se cambió nada.';
 	} else {
-		$res = lp_importar_ajustes( $datos['ajustes'], (array) ( $datos['campos_nombres'] ?? array() ) );
+		$res = lp_importar_ajustes( $datos['ajustes'], (array) ( $datos['campos_nombres'] ?? array() ), (string) ( $datos['icono_url'] ?? '' ) );
 		if ( ! empty( $datos['sitio'] ) ) {
 			array_unshift( $res['avisos'], 'Ajustes importados desde ' . $datos['sitio'] . ' (versión ' . $datos['liquen_panel'] . ').' );
 		}
@@ -132,13 +193,16 @@ add_action( 'admin_post_lp_importar', function () {
 } );
 
 // Adapta los ajustes de otro sitio a este y los guarda. Devuelve qué no se pudo pasar.
-function lp_importar_ajustes( $aj, $nombres ) {
+function lp_importar_ajustes( $aj, $nombres, $icono_url = '' ) {
 	$avisos = array();
 
-	// Ícono: es una imagen de la biblioteca; solo sirve si existe acá.
-	if ( ! empty( $aj['icono'] ) && ! wp_attachment_is_image( (int) $aj['icono'] ) ) {
-		$aj['icono'] = 0;
-		$avisos[]    = 'El ícono de la app no existe en este sitio: elegilo de nuevo en Apariencia.';
+	// Ícono: es una imagen de la biblioteca. En el mismo sitio sirve el ID; en otro, se trae por su dirección.
+	if ( ! empty( $aj['icono'] ) && ! lp_icono_es_del_sitio( (int) $aj['icono'], $icono_url ) ) {
+		$nuevo       = lp_traer_icono( $icono_url );
+		$aj['icono'] = $nuevo;
+		if ( ! $nuevo ) {
+			$avisos[] = 'No se pudo traer el ícono de la app: elegilo de nuevo en Apariencia.';
+		}
 	}
 
 	$disponibles = lp_tipos_disponibles();
