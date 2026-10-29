@@ -35,6 +35,7 @@ En Ajustes → Liquen Panel, la caja «Complementos en el panel» muestra cuále
   (sesión, permiso, nonce y límite de envíos) y avisos después de guardar.
 * El acceso general no cambia: un complemento solo puede restringir más (por ejemplo, solo editores), nunca ampliar.
 * Ajustes → Liquen Panel: caja «Complementos en el panel».
+* Actualizaciones: ya no queda el aviso «Hay una nueva versión» después de que se instaló sola.
 
 1.0.10
 * El panel ya no se cae si el servidor no tiene la extensión mbstring de PHP (pasa al cambiar de versión de PHP

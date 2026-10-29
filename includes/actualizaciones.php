@@ -99,12 +99,12 @@ function lp_ultima_release_sin_api() {
 }
 
 // Datos del plugin en el formato que espera WordPress.
-function lp_datos_actualizacion( $r ) {
+function lp_datos_actualizacion( $r, $instalada = LP_VERSION ) {
 	return (object) array(
 		'id'           => 'github.com/' . LP_GITHUB_REPO,
 		'slug'         => 'liquen-panel',
 		'plugin'       => plugin_basename( LP_FILE ),
-		'new_version'  => $r ? $r['version'] : LP_VERSION,
+		'new_version'  => $r ? $r['version'] : $instalada,
 		'url'          => 'https://github.com/' . LP_GITHUB_REPO,
 		'package'      => $r ? $r['zip'] : '',
 		'requires'     => '6.4',
@@ -121,13 +121,17 @@ add_filter( 'pre_set_site_transient_update_plugins', function ( $transient ) {
 	}
 	$base = plugin_basename( LP_FILE );
 	$r    = lp_ultima_release();
+	// Versión instalada: la que WordPress leyó del archivo, no la constante en memoria.
+	// Justo después de una actualización automática, la constante todavía es la vieja
+	// y el aviso «Hay una nueva versión» quedaba colgado hasta la siguiente revisión.
+	$instalada = (string) ( $transient->checked[ $base ] ?? LP_VERSION );
 
-	if ( $r && version_compare( $r['version'], LP_VERSION, '>' ) ) {
+	if ( $r && version_compare( $r['version'], $instalada, '>' ) ) {
 		$transient->response[ $base ] = lp_datos_actualizacion( $r );
 		unset( $transient->no_update[ $base ] );
 	} else {
 		// Figurar en no_update habilita el enlace «Activar actualizaciones automáticas».
-		$transient->no_update[ $base ] = lp_datos_actualizacion( null );
+		$transient->no_update[ $base ] = lp_datos_actualizacion( null, $instalada );
 		unset( $transient->response[ $base ] );
 	}
 	return $transient;
