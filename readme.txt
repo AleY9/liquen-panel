@@ -1,16 +1,17 @@
 === Liquen Panel ===
-Versión: 1.1.0 · Requiere: WordPress 6.4+, PHP 8.0+, Advanced Custom Fields (gratis)
+Versión: 1.2.0 · Requiere: WordPress 6.4+, PHP 8.0+, Advanced Custom Fields (gratis)
 
 Back office en el front para cargar contenidos desde el celular, sin wp-admin.
 
 == Instalar ==
 1. Backup (JetBackup).
 2. Plugins → Añadir nuevo → Subir plugin → liquen-panel.zip → Activar.
-3. Ajustes → Liquen Panel: nombre, colores, ícono y qué tipos de contenido y campos se cargan.
+3. Ajustes → Liquen Panel → pestaña «Primeros pasos»: guía de configuración (Contenidos, Apariencia, General)
+   y cómo instalar el panel como app en el celular. La pestaña «Diagnóstico» revisa que todo esté bien.
 4. LiteSpeed Cache (si está): Caché → Excluir → «URIs a no cachear» → ^/panel → Guardar → Purgar todo.
 5. Si la dirección /panel/ ya la usa una página del sitio, el panel no la toma y queda apagado:
-   elegir otra dirección en Ajustes → Liquen Panel.
-6. Entrar a /panel/ (o la dirección elegida) desde el celular → menú del navegador → «Agregar a pantalla de inicio».
+   elegir otra dirección en Ajustes → Liquen Panel → General.
+6. Instalar el panel como app en el celular: pasos para Android y iPhone en «Primeros pasos».
 
 == Qué hace ==
 * Inicio, «Mis …» (Próximas / Sin fecha / Pasadas si hay fechas), formulario de un paso.
@@ -26,9 +27,19 @@ Back office en el front para cargar contenidos desde el celular, sin wp-admin.
 Otros plugins (por ejemplo, Liquen Calendarios) pueden sumar su sección al panel con lp_registrar_modulo():
 aparecen en el inicio junto a los tipos de contenido, con el mismo acceso, colores y avisos.
 Cómo se registra uno: ver el comentario al principio de includes/modulos.php.
-En Ajustes → Liquen Panel, la caja «Complementos en el panel» muestra cuáles están enganchados.
+En Ajustes → Liquen Panel → Contenidos, la caja «Complementos en el panel» muestra cuáles están enganchados.
 
 == Cambios ==
+1.2.0
+* Ajustes → Liquen Panel en pestañas, con el mismo formato que Liquen Calendarios: Primeros pasos, General,
+  Contenidos, Apariencia, Diagnóstico y Exportar / importar.
+* Recuadro «Qué hace / Qué no hace» arriba de las pestañas.
+* Primeros pasos: guía de configuración y pasos para instalar el panel como app (Android y iPhone). Incluye el Kit de inicio.
+* Diagnóstico: revisa ACF, dirección del panel, enlaces permanentes, actualizaciones automáticas, PHP, exclusión en
+  LiteSpeed Cache, tipos activos, campos nuevos de ACF, complementos, colores, ícono (tamaño), nombre corto y WhatsApp.
+* General, Contenidos y Apariencia se guardan juntas con un solo botón: pasar de pestaña no pierde lo que se cambió.
+  Los ajustes se guardan igual que antes: al actualizar no se pierde nada.
+
 1.1.0
 * Registro de módulos: los complementos se suman al panel como una sección más del inicio (con su número de orden,
   entre los tipos de contenido), con pantallas propias en /panel/?m=…, formularios protegidos por el núcleo

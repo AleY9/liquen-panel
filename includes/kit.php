@@ -434,7 +434,7 @@ add_action( 'admin_post_lp_kit', function () {
 		);
 		set_transient( 'lp_kit_res', $res, 300 );
 	}
-	wp_safe_redirect( admin_url( 'options-general.php?page=liquen-panel#lp-kit' ) );
+	wp_safe_redirect( admin_url( 'options-general.php?page=liquen-panel&tab=primeros#lp-kit' ) );
 	exit;
 } );
 

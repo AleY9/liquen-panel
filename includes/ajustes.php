@@ -81,7 +81,7 @@ add_action( 'admin_notices', function () {
 		$pto      = get_post_type_object( $slug );
 		$lineas[] = '<strong>' . esc_html( $pto ? $pto->labels->name : $slug ) . ':</strong> ' . esc_html( implode( ', ', $campos ) );
 	}
-	echo '<div class="notice notice-warning"><p><strong>Liquen Panel:</strong> hay campos nuevos de ACF que no están en el formulario del panel.</p><p>' . implode( '<br>', $lineas ) . '</p><p>Si van en el panel, tildalos en <a href="' . esc_url( admin_url( 'options-general.php?page=liquen-panel' ) ) . '">Ajustes → Liquen Panel</a> y guardá. Si no, guardá igual y el aviso desaparece.</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput
+	echo '<div class="notice notice-warning"><p><strong>Liquen Panel:</strong> hay campos nuevos de ACF que no están en el formulario del panel.</p><p>' . implode( '<br>', $lineas ) . '</p><p>Si van en el panel, tildalos en <a href="' . esc_url( admin_url( 'options-general.php?page=liquen-panel&tab=contenidos' ) ) . '">Ajustes → Liquen Panel → Contenidos</a> y guardá. Si no, guardá igual y el aviso desaparece.</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput
 } );
 
 /* ---------- Exportar ---------- */
@@ -188,7 +188,7 @@ add_action( 'admin_post_lp_importar', function () {
 	}
 
 	set_transient( 'lp_io_res_' . get_current_user_id(), $res, 5 * MINUTE_IN_SECONDS );
-	wp_safe_redirect( admin_url( 'options-general.php?page=liquen-panel#lp-io' ) );
+	wp_safe_redirect( admin_url( 'options-general.php?page=liquen-panel&tab=exportar' ) );
 	exit;
 } );
 
@@ -280,7 +280,7 @@ function lp_ajustes_caja() {
 		<h2>Exportar / importar ajustes</h2>
 		<?php if ( $res ) : ?>
 			<div class="notice <?php echo $res['ok'] ? 'notice-success' : 'notice-error'; ?> inline">
-				<?php if ( $res['ok'] ) : ?><p><strong>Ajustes importados.</strong> Revisalos abajo antes de usar el panel.</p><?php endif; ?>
+				<?php if ( $res['ok'] ) : ?><p><strong>Ajustes importados.</strong> Revisalos en las pestañas General, Contenidos y Apariencia antes de usar el panel.</p><?php endif; ?>
 				<?php if ( $res['avisos'] ) : ?><ul style="list-style:disc;margin-left:20px"><?php foreach ( $res['avisos'] as $l ) : ?><li><?php echo esc_html( $l ); ?></li><?php endforeach; ?></ul><?php endif; ?>
 			</div>
 		<?php endif; ?>

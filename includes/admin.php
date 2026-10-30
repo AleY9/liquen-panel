@@ -23,7 +23,7 @@ add_action( 'admin_notices', function () {
 		echo '<div class="notice notice-error"><p><strong>Liquen Panel</strong> necesita Advanced Custom Fields activo.</p></div>';
 	}
 	if ( current_user_can( 'manage_options' ) && lp_slug_ocupado() ) {
-		echo '<div class="notice notice-warning"><p><strong>Liquen Panel está apagado.</strong> ' . esc_html( lp_slug_ocupado_txt() ) . ' No se toca: elegí otra dirección en <a href="' . esc_url( admin_url( 'options-general.php?page=liquen-panel' ) ) . '">Ajustes → Liquen Panel</a>.</p></div>';
+		echo '<div class="notice notice-warning"><p><strong>Liquen Panel está apagado.</strong> ' . esc_html( lp_slug_ocupado_txt() ) . ' No se toca: elegí otra dirección en <a href="' . esc_url( admin_url( 'options-general.php?page=liquen-panel&tab=general' ) ) . '">Ajustes → Liquen Panel → General</a>.</p></div>';
 	}
 } );
 
@@ -136,6 +136,23 @@ function lp_admin_colores_sitio() {
 	return $out;
 }
 
+function lp_admin_pestanas() {
+	return array(
+		'primeros'    => 'Primeros pasos',
+		'general'     => 'General',
+		'contenidos'  => 'Contenidos',
+		'apariencia'  => 'Apariencia',
+		'diagnostico' => 'Diagnóstico',
+		'exportar'    => 'Exportar / importar',
+	);
+}
+
+// Bloque de una pestaña. $tabs: una o varias pestañas (separadas por espacio) donde se ve.
+function lp_admin_tab_abrir( $tabs, $actual ) {
+	$ver = in_array( $actual, explode( ' ', $tabs ), true );
+	echo '<div class="lp-tab" data-tab="' . esc_attr( $tabs ) . '"' . ( $ver ? '' : ' hidden' ) . '>';
+}
+
 function lp_admin_pagina() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
@@ -146,15 +163,23 @@ function lp_admin_pagina() {
 	$tipos_g  = isset( $guardado['tipos'] ) && is_array( $guardado['tipos'] ) ? $guardado['tipos'] : array();
 	$n        = 'lp_ajustes';
 	$nuevos   = lp_campos_nuevos();
+
+	$pestanas = lp_admin_pestanas();
+	$tab      = sanitize_key( wp_unslash( $_GET['tab'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification
+	if ( ! isset( $pestanas[ $tab ] ) ) {
+		// Sin configurar todavía: primeros pasos. Después: el diagnóstico.
+		$tab = empty( $tipos_g ) ? 'primeros' : 'diagnostico';
+	}
 	?>
 	<div class="wrap lp-admin">
 		<h1>Liquen Panel</h1>
 		<?php if ( lp_slug_ocupado() ) : ?>
-			<div class="notice notice-warning inline"><p><strong>El panel está apagado.</strong> <?php echo esc_html( lp_slug_ocupado_txt() ); ?> Cambiá la «Dirección del panel» acá abajo y guardá.</p></div>
+			<div class="notice notice-warning inline"><p><strong>El panel está apagado.</strong> <?php echo esc_html( lp_slug_ocupado_txt() ); ?> Cambiá la «Dirección del panel» en la pestaña General y guardá.</p></div>
 		<?php else : ?>
 			<p>Panel para cargar contenidos desde el celular: <a href="<?php echo esc_url( lp_url() ); ?>" target="_blank"><strong><?php echo esc_html( lp_url() ); ?></strong></a></p>
 		<?php endif; ?>
-		<style>
+		<?php lp_que_hace(); ?>
+		<style>		<style>
 			.lp-admin .lp-box{background:#fff;border:1px solid #dcdcde;border-radius:8px;padding:4px 20px 16px;margin:16px 0;max-width:980px}
 			.lp-admin .lp-tipo{border-top:1px solid #eee;padding-top:8px}
 			.lp-admin .lp-cols{display:flex;flex-wrap:wrap;gap:6px 18px}
@@ -162,11 +187,33 @@ function lp_admin_pagina() {
 			.lp-admin .lp-tax{display:flex;flex-direction:column;gap:2px}.lp-admin .lp-tax-unica{font-size:12px;color:#646970;margin-left:24px}.lp-admin .lp-sw{display:inline-block;width:26px;height:26px;border-radius:4px;border:1px solid #ccc;cursor:pointer;margin:2px;vertical-align:middle}
 			.lp-admin .lp-off{color:#999}
 			.lp-admin details>summary{cursor:pointer;font-weight:600;font-size:15px;padding:8px 0}
+			.lp-admin .lp-tab[hidden]{display:none}
+			.lp-admin .lp-pasos li{margin-bottom:6px}
+			.lp-admin .lp-item{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:10px 14px;margin:6px 0;max-width:980px}
+			.lp-admin .lp-item p{margin:0}
+			.lp-admin .lp-ico{font-weight:700;width:22px;text-align:center;flex:none}
+			.lp-admin .lp-ok .lp-ico{color:#00a32a}.lp-admin .lp-ojo .lp-ico{color:#dba617}.lp-admin .lp-mal .lp-ico{color:#d63638}
+			.lp-admin .lp-resumen{display:flex;flex-wrap:wrap;gap:16px;margin:12px 0;font-size:14px}
+			.lp-admin .lp-resumen span{background:#fff;border:1px solid #dcdcde;border-radius:999px;padding:4px 12px}
+			.lp-admin .lp-grupo{margin-top:18px}
 		</style>
-		<form method="post" action="options.php">
+		<nav class="nav-tab-wrapper lp-tabs" style="margin-bottom:16px">
+			<?php foreach ( $pestanas as $k => $txt ) : ?>
+				<a class="nav-tab <?php echo $tab === $k ? 'nav-tab-active' : ''; ?>" data-ir="<?php echo esc_attr( $k ); ?>" href="<?php echo esc_url( lp_admin_url( $k ) ); ?>"><?php echo esc_html( $txt ); ?><?php echo 'contenidos' === $k && $nuevos ? ' <span style="color:#b32d2e">●</span>' : ''; ?></a>
+			<?php endforeach; ?>
+		</nav>
+
+		<?php lp_admin_tab_abrir( 'primeros', $tab ); ?>
+			<?php lp_tab_primeros(); ?>
+			<?php lp_kit_caja(); ?>
+		</div>
+
+		<?php /* General, Contenidos y Apariencia van en un solo formulario: se guardan juntas, sin perder lo de las otras pestañas. */ ?>
+		<form method="post" action="options.php" id="lp-form">
 			<?php settings_fields( 'lp_ajustes_grupo' ); ?>
 			<input type="hidden" name="<?php echo esc_attr( $n ); ?>[_rev]" value="<?php echo esc_attr( lp_ajustes_rev() ); ?>">
 
+			<?php lp_admin_tab_abrir( 'general', $tab ); ?>
 			<div class="lp-box">
 				<h2>General</h2>
 				<table class="form-table" role="presentation">
@@ -185,32 +232,9 @@ function lp_admin_pagina() {
 				</table>
 			</div>
 
-			<div class="lp-box">
-				<h2>Apariencia</h2>
-				<table class="form-table" role="presentation">
-					<?php
-					$nombres = array( 'principal' => 'Principal (barra y botones)', 'acento' => 'Acento (fechas, detalles)', 'fondo' => 'Fondo', 'texto' => 'Texto', 'error' => 'Errores' );
-					foreach ( $nombres as $k => $lbl ) :
-						?>
-						<tr><th><label for="lp-col-<?php echo esc_attr( $k ); ?>"><?php echo esc_html( $lbl ); ?></label></th><td><input class="lp-color" id="lp-col-<?php echo esc_attr( $k ); ?>" type="color" name="<?php echo esc_attr( $n ); ?>[colores][<?php echo esc_attr( $k ); ?>]" value="<?php echo esc_attr( $c['colores'][ $k ] ); ?>"> <code><?php echo esc_html( $c['colores'][ $k ] ); ?></code></td></tr>
-					<?php endforeach; ?>
-					<tr><th></th><td><button type="button" class="button" id="lp-colores-fabrica" data-colores="<?php echo esc_attr( wp_json_encode( lp_config_defecto()['colores'] ) ); ?>">Volver a los colores de fábrica</button><p class="description">Después tocá «Guardar ajustes».</p></td></tr>
-					<?php $sitio = lp_admin_colores_sitio(); if ( $sitio ) : ?>
-						<tr><th>Colores del sitio</th><td>
-							<?php foreach ( $sitio as $hex => $tit ) : ?><span class="lp-sw" style="background:<?php echo esc_attr( $hex ); ?>" title="<?php echo esc_attr( $hex . ' — ' . $tit ); ?>" data-hex="<?php echo esc_attr( $hex ); ?>"></span><?php endforeach; ?>
-							<p class="description">Tocá un color de arriba (Principal, Acento…) y después uno de estos para copiarlo.</p>
-						</td></tr>
-					<?php endif; ?>
-					<tr><th><label for="lp-fuente">Tipografía</label></th><td><input id="lp-fuente" type="text" class="regular-text" name="<?php echo esc_attr( $n ); ?>[fuente]" value="<?php echo esc_attr( $c['fuente'] ); ?>" placeholder="'Source Sans 3'"><br><input type="url" class="large-text" name="<?php echo esc_attr( $n ); ?>[fuente_url]" value="<?php echo esc_attr( $c['fuente_url'] ); ?>" placeholder="https://fonts.googleapis.com/css2?family=…"><p class="description">Opcional. Vacío = la del sistema del celular (la más liviana).</p></td></tr>
-					<tr><th>Ícono de la app</th><td>
-						<input type="hidden" id="lp-icono" name="<?php echo esc_attr( $n ); ?>[icono]" value="<?php echo (int) $c['icono']; ?>">
-						<span id="lp-icono-prev"><?php echo $c['icono'] ? wp_get_attachment_image( (int) $c['icono'], array( 64, 64 ) ) : ''; ?></span>
-						<button type="button" class="button" id="lp-icono-btn">Elegir imagen</button> <button type="button" class="button-link" id="lp-icono-quitar">Quitar</button>
-						<p class="description">Cuadrada, de 512 × 512 px. Si no hay, se usa el ícono del sitio (Ajustes → Generales).</p>
-					</td></tr>
-				</table>
 			</div>
 
+			<?php lp_admin_tab_abrir( 'contenidos', $tab ); ?>
 			<div class="lp-box">
 				<h2>Qué se carga desde el panel</h2>
 				<p>Los campos salen de ACF. Para cambiar un campo (nombre, ayuda, opciones), editalo en ACF: el panel lo toma solo.</p>
@@ -287,13 +311,71 @@ function lp_admin_pagina() {
 				<?php endforeach; ?>
 			</div>
 
-			<?php submit_button( 'Guardar ajustes' ); ?>
+			</div>
+
+			<?php lp_admin_tab_abrir( 'apariencia', $tab ); ?>
+			<div class="lp-box">
+				<h2>Apariencia</h2>
+				<table class="form-table" role="presentation">
+					<?php
+					$nombres = array( 'principal' => 'Principal (barra y botones)', 'acento' => 'Acento (fechas, detalles)', 'fondo' => 'Fondo', 'texto' => 'Texto', 'error' => 'Errores' );
+					foreach ( $nombres as $k => $lbl ) :
+						?>
+						<tr><th><label for="lp-col-<?php echo esc_attr( $k ); ?>"><?php echo esc_html( $lbl ); ?></label></th><td><input class="lp-color" id="lp-col-<?php echo esc_attr( $k ); ?>" type="color" name="<?php echo esc_attr( $n ); ?>[colores][<?php echo esc_attr( $k ); ?>]" value="<?php echo esc_attr( $c['colores'][ $k ] ); ?>"> <code><?php echo esc_html( $c['colores'][ $k ] ); ?></code></td></tr>
+					<?php endforeach; ?>
+					<tr><th></th><td><button type="button" class="button" id="lp-colores-fabrica" data-colores="<?php echo esc_attr( wp_json_encode( lp_config_defecto()['colores'] ) ); ?>">Volver a los colores de fábrica</button><p class="description">Después tocá «Guardar ajustes».</p></td></tr>
+					<?php $sitio = lp_admin_colores_sitio(); if ( $sitio ) : ?>
+						<tr><th>Colores del sitio</th><td>
+							<?php foreach ( $sitio as $hex => $tit ) : ?><span class="lp-sw" style="background:<?php echo esc_attr( $hex ); ?>" title="<?php echo esc_attr( $hex . ' — ' . $tit ); ?>" data-hex="<?php echo esc_attr( $hex ); ?>"></span><?php endforeach; ?>
+							<p class="description">Tocá un color de arriba (Principal, Acento…) y después uno de estos para copiarlo.</p>
+						</td></tr>
+					<?php endif; ?>
+					<tr><th><label for="lp-fuente">Tipografía</label></th><td><input id="lp-fuente" type="text" class="regular-text" name="<?php echo esc_attr( $n ); ?>[fuente]" value="<?php echo esc_attr( $c['fuente'] ); ?>" placeholder="'Source Sans 3'"><br><input type="url" class="large-text" name="<?php echo esc_attr( $n ); ?>[fuente_url]" value="<?php echo esc_attr( $c['fuente_url'] ); ?>" placeholder="https://fonts.googleapis.com/css2?family=…"><p class="description">Opcional. Vacío = la del sistema del celular (la más liviana).</p></td></tr>
+					<tr><th>Ícono de la app</th><td>
+						<input type="hidden" id="lp-icono" name="<?php echo esc_attr( $n ); ?>[icono]" value="<?php echo (int) $c['icono']; ?>">
+						<span id="lp-icono-prev"><?php echo $c['icono'] ? wp_get_attachment_image( (int) $c['icono'], array( 64, 64 ) ) : ''; ?></span>
+						<button type="button" class="button" id="lp-icono-btn">Elegir imagen</button> <button type="button" class="button-link" id="lp-icono-quitar">Quitar</button>
+						<p class="description">Cuadrada, de 512 × 512 px. Si no hay, se usa el ícono del sitio (Ajustes → Generales).</p>
+					</td></tr>
+				</table>
+			</div>
+
+			</div>
+
+			<?php lp_admin_tab_abrir( 'general contenidos apariencia', $tab ); ?>
+				<?php submit_button( 'Guardar ajustes' ); ?>
+				<p class="description" style="margin-top:-8px">Guarda juntas las pestañas General, Contenidos y Apariencia.</p>
+			</div>
 		</form>
-		<?php lp_modulos_caja(); ?>
-		<?php lp_ajustes_caja(); ?>
-		<?php lp_kit_caja(); ?>
+
+		<?php lp_admin_tab_abrir( 'contenidos', $tab ); ?>
+			<?php lp_modulos_caja(); ?>
+		</div>
+
+		<?php lp_admin_tab_abrir( 'diagnostico', $tab ); ?>
+			<?php lp_tab_diagnostico(); ?>
+		</div>
+
+		<?php lp_admin_tab_abrir( 'exportar', $tab ); ?>
+			<?php lp_ajustes_caja(); ?>
+		</div>
 	</div>
 	<script>
+	(function(){
+		// Pestañas sin recargar: lo que se cambió en una pestaña no se pierde al pasar a otra.
+		var ref=document.querySelector('#lp-form input[name="_wp_http_referer"]');
+		function ir(t){
+			document.querySelectorAll('.lp-tab').forEach(function(d){d.hidden=d.dataset.tab.split(' ').indexOf(t)<0;});
+			document.querySelectorAll('.lp-tabs .nav-tab').forEach(function(a){a.classList.toggle('nav-tab-active',a.dataset.ir===t);});
+			try{var u=new URL(location.href);u.searchParams.set('tab',t);u.hash='';history.replaceState(null,'',u.toString());if(ref){ref.value=u.pathname+u.search;}}catch(e){}
+			window.scrollTo(0,0);
+		}
+		document.addEventListener('click',function(e){
+			var a=e.target.closest('a[data-ir]');
+			if(!a||e.ctrlKey||e.metaKey||e.shiftKey){return;}
+			e.preventDefault();ir(a.dataset.ir);
+		});
+	})();
 	(function(){
 		var ultimo=null;
 		document.querySelectorAll('.lp-color').forEach(function(i){i.addEventListener('focus',function(){ultimo=i;});i.addEventListener('click',function(){ultimo=i;});i.addEventListener('input',function(){i.nextElementSibling.textContent=i.value;});});
