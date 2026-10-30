@@ -18,7 +18,8 @@ function lp_que_hace() {
 	?>
 	<div class="notice notice-info inline" style="margin:12px 0">
 		<p><strong>Qué hace:</strong> un panel en <code>/<?php echo esc_html( lp_config()['slug'] ); ?>/</code> para cargar y editar desde el celular los contenidos del sitio (actividades, alojamientos, entradas…) con los campos de ACF que se eligen acá. Achica las fotos antes de subirlas, ordena por fecha (próximas, sin fecha, pasadas) y se instala como app en el celular. Los complementos (como Liquen Calendarios) suman secciones al panel.</p>
-		<p><strong>Qué no hace:</strong> no crea tipos de contenido ni campos (eso se hace en ACF, o con el Kit de inicio de «Primeros pasos»), no cambia el diseño de la web (eso es Bricks) y no reemplaza a wp-admin para lo de administrador (plugins, usuarios, ajustes). No cobra ni toma reservas.</p>
+		<p><strong>Qué no hace:</strong> no cambia el diseño de la web (eso es Bricks) ni reemplaza a wp-admin para lo de administrador (plugins, usuarios, ajustes). No cobra ni toma reservas.</p>
+		<p><strong>Tipos de contenido y campos:</strong> se arman en ACF. En un sitio nuevo, el Kit de inicio («Primeros pasos») los crea en ACF de una vez.</p>
 		<p>Otras secciones e integraciones (reservas, pagos, plataformas externas) se pueden desarrollar a pedido.</p>
 	</div>
 	<?php

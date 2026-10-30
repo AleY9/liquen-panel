@@ -178,6 +178,9 @@ function lp_admin_pagina() {
 		<?php else : ?>
 			<p>Panel para cargar contenidos desde el celular: <a href="<?php echo esc_url( lp_url() ); ?>" target="_blank"><strong><?php echo esc_html( lp_url() ); ?></strong></a></p>
 		<?php endif; ?>
+		<div class="notice notice-warning inline" style="margin:12px 0">
+			<p><strong>Esta página es para quien arma el sitio.</strong> Para cargar actividades y alojamientos, usá el panel (<a href="<?php echo esc_url( lp_url() ); ?>" target="_blank">/<?php echo esc_html( lp_config()['slug'] ); ?>/</a>). Si cambiás algo acá sin saber qué hace, el panel puede dejar de mostrar campos o secciones. Ante la duda, consultá antes de guardar.</p>
+		</div>
 		<?php lp_que_hace(); ?>
 		<style>		<style>
 			.lp-admin .lp-box{background:#fff;border:1px solid #dcdcde;border-radius:8px;padding:4px 20px 16px;margin:16px 0;max-width:980px}

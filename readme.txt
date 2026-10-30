@@ -1,5 +1,5 @@
 === Liquen Panel ===
-Versión: 1.2.0 · Requiere: WordPress 6.4+, PHP 8.0+, Advanced Custom Fields (gratis)
+Versión: 1.2.1 · Requiere: WordPress 6.4+, PHP 8.0+, Advanced Custom Fields (gratis)
 
 Back office en el front para cargar contenidos desde el celular, sin wp-admin.
 
@@ -30,6 +30,10 @@ Cómo se registra uno: ver el comentario al principio de includes/modulos.php.
 En Ajustes → Liquen Panel → Contenidos, la caja «Complementos en el panel» muestra cuáles están enganchados.
 
 == Cambios ==
+1.2.1
+* Ajustes: aviso «Esta página es para quien arma el sitio» arriba de las pestañas.
+* «Qué no hace» más claro: los tipos de contenido y campos se arman en ACF (o con el Kit de inicio en un sitio nuevo).
+
 1.2.0
 * Ajustes → Liquen Panel en pestañas, con el mismo formato que Liquen Calendarios: Primeros pasos, General,
   Contenidos, Apariencia, Diagnóstico y Exportar / importar.
