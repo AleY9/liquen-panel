@@ -431,7 +431,13 @@ function lp_vista_lista( $slug ) {
 		}
 		$n     = count( $g['ids'] );
 		$boton = $ocultas ? '<button type="button" class="lp-btn lp-btn-sec lp-ver-todas">Ver más (' . $ocultas . ')</button>' : '';
-		// Un solo grupo «Sin fecha» (tipo con fechas pero ninguna cargada): sin título, es la lista entera.
+		if ( ! $solo && ! empty( $g['plegado'] ) ) {
+			// Con varios grupos, Sin fecha y Pasadas siguen plegados (se abren con un toque).
+			$abierto = false !== strpos( $lista, 'lp-item-resaltado' ) ? ' open' : '';
+			$h      .= '<details class="lp-grupo"' . $abierto . '><summary>' . lp_e( $g['titulo'] ) . ' <span class="lp-s">(' . $n . ')</span></summary>' . $lista . $boton . '</details>';
+			continue;
+		}
+		// Un solo grupo «Sin fecha» (tipo con fechas pero ninguna cargada, como un historial): sin título, es la lista entera.
 		$titulo = ( $solo && 'Sin fecha' === $g['titulo'] ) ? '' : '<h2>' . lp_e( $g['titulo'] ) . ' <span class="lp-s">(' . $n . ')</span></h2>';
 		$h     .= '<section class="lp-grupo">' . $titulo . $lista . $boton . '</section>';
 	}
