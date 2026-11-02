@@ -189,7 +189,9 @@ function lp_txt( $tipo, $clave ) {
 		case 'nueva':
 			return ( $f ? 'Nueva ' : 'Nuevo ' ) . $s;
 		case 'mis':
-			return 'Mis ' . $p;
+			// «Mis actividades», pero «Historial de actividades» (si el nombre no empieza con un plural, va sin «Mis»).
+			$primera = (string) strtok( $p, ' ' );
+			return preg_match( '/s$/u', $primera ) ? 'Mis ' . $p : lp_ucfirst( $p );
 		case 'publicada':
 			return $f ? 'Publicada' : 'Publicado';
 		case 'programada':

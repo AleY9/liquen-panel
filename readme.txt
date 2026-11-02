@@ -35,6 +35,8 @@ En Ajustes → Liquen Panel → Contenidos, la caja «Complementos en el panel»
   (más de 8) muestran los más recientes —5 si hay otros grupos, 10 si es el único— y «Ver más (N)» para el resto.
   Los grupos chicos (como los alojamientos) y las próximas se ven enteros. El buscador sigue buscando en todos.
 * Si un tipo con fechas no tiene ninguna cargada (por ejemplo, un historial), la lista sale sin el título «Sin fecha».
+* Si el nombre del tipo no empieza con un plural (por ejemplo «historial de actividades»), el panel no le
+  antepone «Mis»: dice «Historial de actividades» y no «Mis historial de actividades».
 
 1.3.1
 * Diagnóstico, grupo «Seguridad»: avisa si la ejecución de PHP por MCP (BRICKS_ENABLE_PHP_ABILITIES) o la
