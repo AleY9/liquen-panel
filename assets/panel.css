@@ -69,7 +69,7 @@ details.lp-grupo > summary::-webkit-details-marker { display: none; }
 details.lp-grupo > summary::after { content: ''; width: 9px; height: 9px; margin-left: auto; border-right: 2.5px solid var(--lp-principal); border-bottom: 2.5px solid var(--lp-principal); transform: rotate(45deg) translateY(-3px); transition: transform .15s; }
 details.lp-grupo[open] > summary::after { transform: rotate(-135deg) translateY(-3px); }
 details.lp-grupo:not([open]) { border-bottom: 1px solid var(--lp-borde); }
-details.lp-grupo .lp-ver-todas { margin-top: 10px; }
+.lp-grupo .lp-ver-todas { margin-top: 4px; }
 .lp-buscar { width: 100%; min-height: 48px; padding: 10px 14px; font: inherit; font-size: 17px; border: 1px solid #cfcac0; border-radius: var(--lp-radio); background: #fff; color: inherit; box-sizing: border-box; }
 .lp-buscar:focus { outline: 2px solid var(--lp-principal); outline-offset: 1px; }
 .lp-listas { display: flex; flex-direction: column; gap: 18px; }

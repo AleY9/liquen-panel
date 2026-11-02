@@ -1,5 +1,5 @@
 === Liquen Panel ===
-Versión: 1.3.1 · Requiere: WordPress 6.4+, PHP 8.0+, Advanced Custom Fields (gratis)
+Versión: 1.3.2 · Requiere: WordPress 6.4+, PHP 8.0+, Advanced Custom Fields (gratis)
 
 Back office en el front para cargar contenidos desde el celular, sin wp-admin.
 
@@ -30,6 +30,12 @@ Cómo se registra uno: ver el comentario al principio de includes/modulos.php.
 En Ajustes → Liquen Panel → Contenidos, la caja «Complementos en el panel» muestra cuáles están enganchados.
 
 == Cambios ==
+1.3.2
+* Listas del panel sin grupos plegados: todo se ve con un clic menos. Los grupos con muchos contenidos
+  (más de 8) muestran los más recientes —5 si hay otros grupos, 10 si es el único— y «Ver más (N)» para el resto.
+  Los grupos chicos (como los alojamientos) y las próximas se ven enteros. El buscador sigue buscando en todos.
+* Si un tipo con fechas no tiene ninguna cargada (por ejemplo, un historial), la lista sale sin el título «Sin fecha».
+
 1.3.1
 * Diagnóstico, grupo «Seguridad»: avisa si la ejecución de PHP por MCP (BRICKS_ENABLE_PHP_ABILITIES) o la
   «Ejecución de código» de Bricks están activas en un sitio que parece de producción. En un staging es normal.

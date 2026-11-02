@@ -394,34 +394,35 @@ function lp_vista_lista( $slug ) {
 	if ( ! $ids ) {
 		return $h . '<p class="lp-vacio">' . lp_e( lp_txt( $t, 'ninguna' ) ) . '</p>';
 	}
-	$ver = 'f' === $t['genero'] ? 'Ver todas' : 'Ver todos';
-	$max = (int) apply_filters( 'lp_lista_max_plegado', 10, $slug );
 	if ( count( $ids ) > 5 ) {
 		$h .= '<input type="search" class="lp-buscar" placeholder="Buscar por título" aria-label="Buscar por título" autocomplete="off">';
 	}
-	$h .= '<div class="lp-listas">';
-	foreach ( lp_agrupar( $slug, $ids ) as $g ) {
-		if ( ! $g['ids'] ) {
-			continue;
-		}
-		$plegado = ! empty( $g['plegado'] );
-		$lista   = '';
+	$grupos = array_values( array_filter( lp_agrupar( $slug, $ids ), function ( $g ) {
+		return (bool) $g['ids'];
+	} ) );
+	$solo = 1 === count( $grupos );
+	// Grupos con muchos (más de 8): se ven las primeras —5 si hay otros grupos, 10 si es el único— y el resto
+	// con «Ver más». Los grupos chicos (como los alojamientos) se ven enteros. Las próximas, siempre enteras.
+	$max = (int) apply_filters( 'lp_lista_max_plegado', $solo ? 10 : 5, $slug );
+	$h  .= '<div class="lp-listas">';
+	foreach ( $grupos as $g ) {
+		$limita = 0 !== strpos( $g['titulo'], 'Próxim' ) && count( $g['ids'] ) > max( 8, $max );
+		$lista  = '';
+		$ocultas = 0;
 		foreach ( array_values( $g['ids'] ) as $i => $id ) {
 			$tar = lp_tarjeta( $slug, $id );
-			// En los grupos plegados se ven las primeras; el resto con «Ver todas».
-			if ( $plegado && $i >= $max && false === strpos( $tar, 'lp-item-resaltado' ) ) {
+			// Se ven las primeras (las más recientes); el resto con «Ver más». El recién guardado siempre a la vista.
+			if ( $limita && $i >= $max && false === strpos( $tar, 'lp-item-resaltado' ) ) {
 				$tar = str_replace( '<article class="lp-item', '<article hidden class="lp-mas lp-item', $tar );
+				$ocultas++;
 			}
 			$lista .= $tar;
 		}
 		$n     = count( $g['ids'] );
-		$boton = $plegado && $n > $max ? '<button type="button" class="lp-btn lp-btn-sec lp-ver-todas">' . lp_e( $ver ) . ' (' . $n . ')</button>' : '';
-		if ( $plegado ) {
-			$abierto = false !== strpos( $lista, 'lp-item-resaltado' ) ? ' open' : '';
-			$h      .= '<details class="lp-grupo"' . $abierto . '><summary>' . lp_e( $g['titulo'] ) . ' <span class="lp-s">(' . $n . ')</span></summary>' . $lista . $boton . '</details>';
-		} else {
-			$h .= '<section class="lp-grupo"><h2>' . lp_e( $g['titulo'] ) . ' <span class="lp-s">(' . $n . ')</span></h2>' . $lista . '</section>';
-		}
+		$boton = $ocultas ? '<button type="button" class="lp-btn lp-btn-sec lp-ver-todas">Ver más (' . $ocultas . ')</button>' : '';
+		// Un solo grupo «Sin fecha» (tipo con fechas pero ninguna cargada): sin título, es la lista entera.
+		$titulo = ( $solo && 'Sin fecha' === $g['titulo'] ) ? '' : '<h2>' . lp_e( $g['titulo'] ) . ' <span class="lp-s">(' . $n . ')</span></h2>';
+		$h     .= '<section class="lp-grupo">' . $titulo . $lista . $boton . '</section>';
 	}
 	$h .= '<p class="lp-vacio lp-sin-resultados" hidden></p></div>';
 	return $h;
