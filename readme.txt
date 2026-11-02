@@ -1,5 +1,5 @@
 === Liquen Panel ===
-Versión: 1.3.0 · Requiere: WordPress 6.4+, PHP 8.0+, Advanced Custom Fields (gratis)
+Versión: 1.3.1 · Requiere: WordPress 6.4+, PHP 8.0+, Advanced Custom Fields (gratis)
 
 Back office en el front para cargar contenidos desde el celular, sin wp-admin.
 
@@ -30,6 +30,13 @@ Cómo se registra uno: ver el comentario al principio de includes/modulos.php.
 En Ajustes → Liquen Panel → Contenidos, la caja «Complementos en el panel» muestra cuáles están enganchados.
 
 == Cambios ==
+1.3.1
+* Diagnóstico, grupo «Seguridad»: avisa si la ejecución de PHP por MCP (BRICKS_ENABLE_PHP_ABILITIES) o la
+  «Ejecución de código» de Bricks están activas en un sitio que parece de producción. En un staging es normal.
+  El sitio se toma como staging si WordPress lo marca así o si la dirección empieza con staging., dev., test.,
+  stage. o qa. Para marcarlo a mano: define( 'LP_ES_STAGING', true ); en el wp-config.php.
+* Diagnóstico: el aviso de fechas de fin empieza con mayúscula.
+
 1.3.0
 * La fecha de fin se guarda siempre: en un contenido de un día queda igual a la de inicio. En el panel se sigue
   viendo vacía, para no confundir. Vale al guardar desde el panel y desde wp-admin.

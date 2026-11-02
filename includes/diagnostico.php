@@ -65,6 +65,24 @@ function lp_tab_primeros() {
 
 /* ---------- Diagnóstico ---------- */
 
+/**
+ * ¿Es un sitio de pruebas? Sí si WordPress lo marca como staging/development/local
+ * (WP_ENVIRONMENT_TYPE), si la dirección empieza con staging., dev., test., stage. o qa.,
+ * o termina en .local, .test o .localhost. Para marcarlo a mano: define( 'LP_ES_STAGING', true );
+ * en el wp-config.php (o false para forzar producción).
+ */
+function lp_es_staging() {
+	if ( defined( 'LP_ES_STAGING' ) ) {
+		return (bool) LP_ES_STAGING;
+	}
+	$es = in_array( wp_get_environment_type(), array( 'staging', 'development', 'local' ), true );
+	if ( ! $es ) {
+		$host = strtolower( (string) wp_parse_url( home_url(), PHP_URL_HOST ) );
+		$es   = (bool) preg_match( '/^(staging|stage|dev|test|qa)[.\-]|\.(local|test|localhost)$/', $host );
+	}
+	return (bool) apply_filters( 'lp_es_staging', $es );
+}
+
 // Exclusiones de LiteSpeed Cache (se guardan como lista o como texto, según la versión).
 function lp_litespeed_excluidas() {
 	$v = get_option( 'litespeed.conf.cache-exc', array() );
@@ -137,6 +155,25 @@ function lp_diagnostico() {
 		$add( $G, 'ojo', 'PHP ' . PHP_VERSION . ': funciona, pero conviene pasar a 8.3 (las versiones viejas dejan de recibir arreglos de seguridad).' );
 	}
 
+	// Ejecutar PHP por MCP / ejecución de código de Bricks: solo en stagings.
+	$S        = 'Seguridad';
+	$php_mcp  = defined( 'BRICKS_ENABLE_PHP_ABILITIES' ) && BRICKS_ENABLE_PHP_ABILITIES;
+	$bricks_g = get_option( 'bricks_global_settings', array() );
+	$codigo   = is_array( $bricks_g ) && ! empty( $bricks_g['executeCodeEnabled'] );
+	if ( lp_es_staging() ) {
+		if ( $php_mcp || $codigo ) {
+			$add( $S, 'ok', 'Sitio de pruebas (staging): la ejecución de PHP por MCP o de código de Bricks está activa. Acá está bien; en producción no tiene que estar.' );
+		} else {
+			$add( $S, 'ok', 'Sitio de pruebas (staging): la ejecución de PHP por MCP y de código de Bricks están apagadas.' );
+		}
+	} elseif ( $php_mcp ) {
+		$add( $S, 'mal', 'Este sitio parece de producción y tiene activa la ejecución de PHP por MCP: cualquiera con la conexión MCP puede correr código. Sacá la línea define( \'BRICKS_ENABLE_PHP_ABILITIES\', true ); del wp-config.php' . ( $codigo ? ' y apagá Bricks → Ajustes → «Ejecución de código»' : '' ) . '. Si en realidad es un staging, agregá define( \'LP_ES_STAGING\', true ); en el wp-config.php.' );
+	} elseif ( $codigo ) {
+		$add( $S, 'ojo', 'Este sitio parece de producción y tiene habilitada Bricks → Ajustes → «Ejecución de código». Si ningún elemento de la web la usa, apagala.', admin_url( 'admin.php?page=bricks-settings' ) );
+	} else {
+		$add( $S, 'ok', 'Sin ejecución de PHP por MCP ni de código de Bricks.' );
+	}
+
 	// LiteSpeed Cache.
 	$C = 'Caché';
 	if ( defined( 'LSCWP_V' ) ) {
@@ -185,9 +222,9 @@ function lp_diagnostico() {
 		}
 		$faltan = count( lp_sin_fin( $slug ) );
 		if ( $faltan ) {
-			$add( $T, 'ojo', $t['plural'] . ': ' . $faltan . ' sin fecha de fin guardada. La web no las puede filtrar bien por fecha de fin. Completarlas ahora (las de un día quedan con fin = inicio; en el panel se sigue viendo vacía).', wp_nonce_url( admin_url( 'admin-post.php?action=lp_completar_fines' ), 'lp_completar_fines' ) );
+			$add( $T, 'ojo', lp_ucfirst( $t['plural'] ) . ': ' . $faltan . ' sin fecha de fin guardada. La web no las puede filtrar bien por fecha de fin. Completarlas ahora (las de un día quedan con fin = inicio; en el panel se sigue viendo vacía).', wp_nonce_url( admin_url( 'admin-post.php?action=lp_completar_fines' ), 'lp_completar_fines' ) );
 		} else {
-			$add( $T, 'ok', $t['plural'] . ': todas tienen la fecha de fin guardada (las de un día, igual a la de inicio).' );
+			$add( $T, 'ok', lp_ucfirst( $t['plural'] ) . ': todas tienen la fecha de fin guardada (las de un día, igual a la de inicio).' );
 		}
 	}
 
