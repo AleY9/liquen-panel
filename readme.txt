@@ -1,5 +1,5 @@
 === Liquen Panel ===
-Versión: 1.2.1 · Requiere: WordPress 6.4+, PHP 8.0+, Advanced Custom Fields (gratis)
+Versión: 1.3.0 · Requiere: WordPress 6.4+, PHP 8.0+, Advanced Custom Fields (gratis)
 
 Back office en el front para cargar contenidos desde el celular, sin wp-admin.
 
@@ -30,6 +30,14 @@ Cómo se registra uno: ver el comentario al principio de includes/modulos.php.
 En Ajustes → Liquen Panel → Contenidos, la caja «Complementos en el panel» muestra cuáles están enganchados.
 
 == Cambios ==
+1.3.0
+* La fecha de fin se guarda siempre: en un contenido de un día queda igual a la de inicio. En el panel se sigue
+  viendo vacía, para no confundir. Vale al guardar desde el panel y desde wp-admin.
+  Sirve para que la web filtre con una sola condición («fecha de fin ≥ hoy»): así un retiro de varios días
+  no desaparece de los listados el día que empieza.
+* Al actualizar, se completan solos los contenidos ya cargados. Diagnóstico avisa si queda alguno sin fecha de fin
+  y tiene un enlace para completarlos.
+
 1.2.1
 * Ajustes: aviso «Esta página es para quien arma el sitio» arriba de las pestañas.
 * «Qué no hace» más claro: los tipos de contenido y campos se arman en ACF (o con el Kit de inicio en un sitio nuevo).

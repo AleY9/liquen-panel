@@ -189,8 +189,113 @@ function lp_valores_post( $slug, $post_id ) {
 	foreach ( lp_items( $slug ) as $it ) {
 		$out[ $it['id'] ] = lp_leer( $it, $post_id );
 	}
+	// Actividad de un día: la fecha de fin se guarda igual a la de inicio (ver lp_completar_fin),
+	// pero en el formulario se muestra vacía para no confundir.
+	$tipo = lp_tipo( $slug );
+	$fi   = $tipo['fecha_inicio'] ?? '';
+	$ff   = $tipo['fecha_fin'] ?? '';
+	if ( $fi && $ff && isset( $out[ $fi ], $out[ $ff ] ) && '' !== $out[ $fi ] && $out[ $ff ] === $out[ $fi ] ) {
+		$out[ $ff ] = '';
+	}
 	return $out;
 }
+
+/**
+ * Fecha de fin siempre guardada: si el contenido tiene fecha de inicio y la de fin está vacía
+ * (o es anterior), se guarda fin = inicio. Así la web puede filtrar con una sola condición
+ * («fin ≥ hoy») y un contenido de varios días no desaparece el día que empieza.
+ * Devuelve true si cambió algo.
+ */
+function lp_completar_fin( $slug, $post_id ) {
+	$tipo = lp_tipo( $slug );
+	if ( ! $tipo || empty( $tipo['fecha_inicio'] ) || empty( $tipo['fecha_fin'] ) || ! function_exists( 'update_field' ) ) {
+		return false;
+	}
+	$n_ini = lp_nombre_campo( $tipo['fecha_inicio'] );
+	$n_fin = lp_nombre_campo( $tipo['fecha_fin'] );
+	if ( ! $n_ini || ! $n_fin ) {
+		return false;
+	}
+	$ini = preg_replace( '/\D/', '', (string) get_post_meta( $post_id, $n_ini, true ) );
+	$fin = preg_replace( '/\D/', '', (string) get_post_meta( $post_id, $n_fin, true ) );
+	if ( 8 !== strlen( $ini ) || ( 8 === strlen( $fin ) && $fin >= $ini ) ) {
+		return false;
+	}
+	update_field( $tipo['fecha_fin'], $ini, $post_id );
+	return true;
+}
+
+// Contenidos de un tipo que tienen fecha de inicio y les falta la de fin.
+function lp_sin_fin( $slug ) {
+	$tipo = lp_tipo( $slug );
+	if ( ! $tipo || empty( $tipo['fecha_inicio'] ) || empty( $tipo['fecha_fin'] ) ) {
+		return array();
+	}
+	$n_ini = lp_nombre_campo( $tipo['fecha_inicio'] );
+	$n_fin = lp_nombre_campo( $tipo['fecha_fin'] );
+	if ( ! $n_ini || ! $n_fin ) {
+		return array();
+	}
+	$ids = get_posts( array(
+		'post_type'      => $slug,
+		'post_status'    => array( 'publish', 'draft', 'pending', 'future', 'private' ),
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+		'no_found_rows'  => true,
+		'meta_query'     => array( array( 'key' => $n_ini, 'value' => '', 'compare' => '!=' ) ), // phpcs:ignore WordPress.DB
+	) );
+	$out = array();
+	foreach ( $ids as $id ) {
+		$ini = preg_replace( '/\D/', '', (string) get_post_meta( $id, $n_ini, true ) );
+		$fin = preg_replace( '/\D/', '', (string) get_post_meta( $id, $n_fin, true ) );
+		if ( 8 === strlen( $ini ) && ! ( 8 === strlen( $fin ) && $fin >= $ini ) ) {
+			$out[] = (int) $id;
+		}
+	}
+	return $out;
+}
+
+// Completa la fecha de fin en todos los contenidos activos que la tengan vacía. Devuelve cuántos cambió.
+function lp_completar_fines() {
+	$n = 0;
+	foreach ( array_keys( lp_tipos_activos() ) as $slug ) {
+		foreach ( lp_sin_fin( $slug ) as $id ) {
+			$n += lp_completar_fin( $slug, $id ) ? 1 : 0;
+		}
+	}
+	return $n;
+}
+
+// Lo que se guarda desde wp-admin (editor de ACF) también queda con la fecha de fin.
+add_action( 'acf/save_post', function ( $post_id ) {
+	if ( ! is_numeric( $post_id ) || wp_is_post_revision( (int) $post_id ) ) {
+		return;
+	}
+	$slug = get_post_type( (int) $post_id );
+	if ( $slug && lp_tipo( $slug ) ) {
+		lp_completar_fin( $slug, (int) $post_id );
+	}
+}, 20 );
+
+// Al actualizar el plugin: una vez por versión, se completan los contenidos ya cargados.
+add_action( 'admin_init', function () {
+	if ( get_option( 'lp_fines_version' ) === LP_VERSION || ! function_exists( 'acf_get_field' ) || ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+	lp_completar_fines();
+	update_option( 'lp_fines_version', LP_VERSION, false );
+} );
+
+// Botón del Diagnóstico: completar ahora.
+add_action( 'admin_post_lp_completar_fines', function () {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( 'Sin permiso.' );
+	}
+	check_admin_referer( 'lp_completar_fines' );
+	$n = lp_completar_fines();
+	wp_safe_redirect( add_query_arg( 'lp_fines', $n, lp_admin_url( 'diagnostico' ) ) );
+	exit;
+} );
 
 // Valores iniciales de un contenido nuevo (los "valor por defecto" de ACF).
 function lp_valores_nuevos( $slug ) {
@@ -619,6 +724,7 @@ function lp_escribir( $slug, $post_id, $vals ) {
 				update_field( $it['id'], $v, $post_id );
 		}
 	}
+	lp_completar_fin( $slug, $post_id );
 }
 
 // Imágenes que usa un contenido (para adjuntarlas al contenido).

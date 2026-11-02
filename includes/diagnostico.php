@@ -178,6 +178,19 @@ function lp_diagnostico() {
 		$add( $T, 'ok', 'Complemento en el panel: ' . $m['titulo'] . '.' );
 	}
 
+	// Fecha de fin siempre guardada (en los de un día, igual a la de inicio).
+	foreach ( $activos as $slug => $t ) {
+		if ( empty( $t['fecha_inicio'] ) || empty( $t['fecha_fin'] ) ) {
+			continue;
+		}
+		$faltan = count( lp_sin_fin( $slug ) );
+		if ( $faltan ) {
+			$add( $T, 'ojo', $t['plural'] . ': ' . $faltan . ' sin fecha de fin guardada. La web no las puede filtrar bien por fecha de fin. Completarlas ahora (las de un día quedan con fin = inicio; en el panel se sigue viendo vacía).', wp_nonce_url( admin_url( 'admin-post.php?action=lp_completar_fines' ), 'lp_completar_fines' ) );
+		} else {
+			$add( $T, 'ok', $t['plural'] . ': todas tienen la fecha de fin guardada (las de un día, igual a la de inicio).' );
+		}
+	}
+
 	// Apariencia.
 	$A = 'Apariencia';
 	if ( $c['colores'] === lp_config_defecto()['colores'] ) {
@@ -220,6 +233,10 @@ function lp_tab_diagnostico() {
 	$items  = lp_diagnostico();
 	$cuenta = array_count_values( array_column( $items, 'estado' ) );
 	$iconos = array( 'ok' => '✓', 'ojo' => '!', 'mal' => '✕' );
+	if ( isset( $_GET['lp_fines'] ) ) { // phpcs:ignore WordPress.Security
+		$n = (int) $_GET['lp_fines']; // phpcs:ignore WordPress.Security
+		echo '<div class="notice notice-success inline"><p>' . esc_html( $n ? 'Listo: se completó la fecha de fin en ' . $n . ( 1 === $n ? ' contenido.' : ' contenidos.' ) : 'No había nada para completar.' ) . '</p></div>';
+	}
 	?>
 	<div class="lp-resumen">
 		<span style="color:#00a32a">✓ <?php echo (int) ( $cuenta['ok'] ?? 0 ); ?> bien</span>

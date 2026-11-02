@@ -157,7 +157,7 @@ function lp_kit_campos_actividad( $tipos, $nombre_emp, $na = array( 'singular' =
 	$f   = array();
 	$f[] = lp_kit_campo( $pre, 'tipo_de_actividad', 'Tipo de ' . $na['singular'], 'button_group', array( 'choices' => $choices, 'default_value' => reset( $tipos ), 'return_format' => 'label', 'layout' => 'horizontal', 'allow_null' => 0 ) );
 	$f[] = lp_kit_campo( $pre, 'fecha_actividad', 'Fecha de inicio', 'date_picker', array( 'display_format' => 'd/m/Y', 'return_format' => 'Ymd', 'first_day' => 1, 'instructions' => 'Vacía = todo el año.', 'wrapper' => $medio ) );
-	$f[] = lp_kit_campo( $pre, 'fecha_actividad_fin', 'Fecha de fin', 'date_picker', array( 'display_format' => 'd/m/Y', 'return_format' => 'Ymd', 'first_day' => 1, 'instructions' => 'Solo si dura más de un día.', 'wrapper' => $medio ) );
+	$f[] = lp_kit_campo( $pre, 'fecha_actividad_fin', 'Fecha de fin', 'date_picker', array( 'display_format' => 'd/m/Y', 'return_format' => 'Ymd', 'first_day' => 1, 'instructions' => 'Solo si dura más de un día. Si queda vacía, se guarda igual a la de inicio.', 'wrapper' => $medio ) );
 	$f[] = lp_kit_campo( $pre, 'hora_inicio', 'Hora de inicio', 'time_picker', array( 'display_format' => 'H:i', 'return_format' => 'H:i', 'wrapper' => $medio ) );
 
 	// Duración: se oculta en los tipos de varios días.
