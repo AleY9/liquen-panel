@@ -28,7 +28,15 @@ function lp_ir( $args ) {
 
 // ¿Puede el usuario actual editar este contenido desde el panel?
 function lp_puede_editar( $id, $slug ) {
-	return $id && get_post_type( $id ) === $slug && lp_tipo( $slug ) && current_user_can( 'edit_post', $id )
+	$tipo = lp_tipo( $slug );
+	return $id && get_post_type( $id ) === $slug && $tipo && empty( $tipo['solo_ver'] ) && current_user_can( 'edit_post', $id )
+		&& in_array( get_post_status( $id ), array( 'publish', 'draft', 'pending', 'future', 'private' ), true );
+}
+
+// ¿Puede borrarlo (a la papelera)? Vale también para los tipos «Solo ver y borrar».
+function lp_puede_borrar( $id, $slug ) {
+	$tipo = lp_tipo( $slug );
+	return $id && get_post_type( $id ) === $slug && $tipo && ! empty( $tipo['borrar'] ) && current_user_can( 'delete_post', $id )
 		&& in_array( get_post_status( $id ), array( 'publish', 'draft', 'pending', 'future', 'private' ), true );
 }
 
@@ -241,7 +249,7 @@ function lp_accion_duplicar( $slug, $id ) {
 
 function lp_accion_borrar( $slug, $id ) {
 	$tipo = lp_tipo( $slug );
-	if ( ! lp_puede_editar( $id, $slug ) || empty( $tipo['borrar'] ) || ! current_user_can( 'delete_post', $id ) ) {
+	if ( ! lp_puede_borrar( $id, $slug ) ) {
 		lp_ir( array( 'msg' => 'sinpermiso' ) );
 	}
 	wp_trash_post( $id );

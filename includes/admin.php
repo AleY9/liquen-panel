@@ -83,11 +83,12 @@ function lp_admin_limpiar( $in ) {
 		$taxs = get_object_taxonomies( $slug );
 		$out['tipos'][ $slug ] = array(
 			'activo'       => empty( $t['activo'] ) ? 0 : 1,
-			'singular'     => mb_strtolower( sanitize_text_field( $t['singular'] ?? '' ) ),
-			'plural'       => mb_strtolower( sanitize_text_field( $t['plural'] ?? '' ) ),
+			'singular'     => lp_lcfirst( sanitize_text_field( $t['singular'] ?? '' ) ),
+			'plural'       => lp_lcfirst( sanitize_text_field( $t['plural'] ?? '' ) ),
 			'genero'       => ( $t['genero'] ?? 'm' ) === 'f' ? 'f' : 'm',
 			'crear'        => empty( $t['crear'] ) ? 0 : 1,
 			'borrar'       => empty( $t['borrar'] ) ? 0 : 1,
+			'solo_ver'     => empty( $t['solo_ver'] ) ? 0 : 1,
 			'programar'    => empty( $t['programar'] ) ? 0 : 1,
 			'nucleo'       => array_values( array_intersect( array_merge( array( 'titulo' ), (array) ( $t['nucleo'] ?? array() ) ), array( 'titulo', 'contenido', 'foto', 'extracto' ) ) ),
 			'taxonomias'   => array_values( array_intersect( (array) ( $t['taxonomias'] ?? array() ), $taxs ) ),
@@ -266,6 +267,7 @@ function lp_admin_pagina() {
 						<p class="lp-cols">
 							<label><input type="checkbox" name="<?php echo esc_attr( $pre ); ?>[crear]" value="1" <?php checked( ! empty( $t['crear'] ) ); ?>> Se pueden crear nuevos</label>
 							<label><input type="checkbox" name="<?php echo esc_attr( $pre ); ?>[borrar]" value="1" <?php checked( ! empty( $t['borrar'] ) ); ?>> Se pueden borrar (a la papelera)</label>
+							<label><input type="checkbox" name="<?php echo esc_attr( $pre ); ?>[solo_ver]" value="1" <?php checked( ! empty( $t['solo_ver'] ) ); ?>> Solo ver y borrar (historial: no se editan desde el panel)</label>
 							<label><input type="checkbox" name="<?php echo esc_attr( $pre ); ?>[programar]" value="1" <?php checked( ! empty( $t['programar'] ) ); ?>> Se puede programar la publicación</label>
 						</p>
 						<p><label>Orden en el inicio del panel <input type="number" min="1" max="99" name="<?php echo esc_attr( $pre ); ?>[orden]" value="<?php echo (int) ( ! empty( $t['orden'] ) && 99 !== (int) $t['orden'] ? $t['orden'] : $lp_pos ); ?>" style="width:70px"></label> <span class="description">— el número más bajo va primero</span></p>

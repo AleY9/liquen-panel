@@ -98,6 +98,7 @@ function lp_tipo_defecto( $slug, $activo = false ) {
 		'genero'        => 'post' === $slug ? 'f' : 'm',
 		'crear'         => 1,
 		'borrar'        => 1,
+		'solo_ver'      => 0,
 		'programar'     => 0,
 		'nucleo'        => $nucleo,
 		'taxonomias'    => $tax,
@@ -204,6 +205,10 @@ function lp_txt( $tipo, $clave ) {
 			return ( $f ? 'Se borró la ' : 'Se borró el ' ) . $s . '. Si fue un error, se recupera desde la papelera de WordPress.';
 	}
 	return '';
+}
+
+function lp_lcfirst( $s ) {
+	return mb_strtolower( mb_substr( $s, 0, 1 ) ) . mb_substr( $s, 1 );
 }
 
 function lp_ucfirst( $s ) {

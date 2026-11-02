@@ -37,6 +37,11 @@ En Ajustes → Liquen Panel → Contenidos, la caja «Complementos en el panel»
 * Si un tipo con fechas no tiene ninguna cargada (por ejemplo, un historial), la lista sale sin el título «Sin fecha».
 * Si el nombre del tipo no empieza con un plural (por ejemplo «historial de actividades»), el panel no le
   antepone «Mis»: dice «Historial de actividades» y no «Mis historial de actividades».
+* Ajustes → Contenidos, opción nueva por tipo: «Solo ver y borrar (historial)». En el panel ese tipo muestra solo
+  «Ver» y «Borrar» (la tarjeta abre la página en la web); no se edita, publica ni pasa a borrador desde el panel
+  (sí desde wp-admin). Pensado para historiales, como las Entradas viejas de Tao.
+* Los nombres de los tipos respetan las mayúsculas que se escriben, salvo la primera letra (ej. «historial de
+  actividades (Entradas)»).
 
 1.3.1
 * Diagnóstico, grupo «Seguridad»: avisa si la ejecución de PHP por MCP (BRICKS_ENABLE_PHP_ABILITIES) o la

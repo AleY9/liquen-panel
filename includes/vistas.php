@@ -358,7 +358,10 @@ function lp_tarjeta( $slug, $id ) {
 	$est  = get_post_status( $id );
 	$res  = isset( $_GET['id'] ) && (int) $_GET['id'] === $id ? ' lp-item-resaltado' : ''; // phpcs:ignore WordPress.Security
 	$h    = '<article class="lp-item' . $res . '" id="lp-' . (int) $id . '" data-t="' . esc_attr( get_the_title( $id ) ) . '">';
-	$h   .= '<a class="lp-item-cab" href="' . esc_url( lp_url( array( 'v' => 'editar', 't' => $slug, 'id' => $id ) ) ) . '">';
+	$solo = ! empty( $tipo['solo_ver'] );
+	$h   .= $solo
+		? '<a class="lp-item-cab" href="' . esc_url( lp_url_ver( $id ) ) . '" target="_blank" rel="noopener">'
+		: '<a class="lp-item-cab" href="' . esc_url( lp_url( array( 'v' => 'editar', 't' => $slug, 'id' => $id ) ) ) . '">';
 	$h   .= '<span class="lp-item-img"' . ( $img ? ' style="background-image:url(' . esc_url( $img ) . ')"' : '' ) . '>' . ( $img ? '' : 'Sin imagen' ) . '</span>';
 	$h   .= '<span class="lp-item-info"><strong>' . lp_e( get_the_title( $id ) ? get_the_title( $id ) : '(sin título)' ) . '</strong>';
 	if ( $ini ) {
@@ -366,8 +369,16 @@ function lp_tarjeta( $slug, $id ) {
 	}
 	$h .= lp_chip_estado( $tipo, $id ) . '</span></a>';
 	$h .= '<div class="lp-item-acc">';
-	$h .= '<a class="lp-mini" href="' . esc_url( lp_url( array( 'v' => 'editar', 't' => $slug, 'id' => $id ) ) ) . '">Editar</a>';
+	if ( ! $solo ) {
+		$h .= '<a class="lp-mini" href="' . esc_url( lp_url( array( 'v' => 'editar', 't' => $slug, 'id' => $id ) ) ) . '">Editar</a>';
+	}
 	$h .= '<a class="lp-mini" href="' . esc_url( lp_url_ver( $id ) ) . '" target="_blank" rel="noopener">Ver</a>';
+	if ( $solo ) {
+		if ( lp_puede_borrar( $id, $slug ) ) {
+			$h .= lp_boton_accion( $slug, $id, 'borrar', 'Borrar', array(), 'lp-mini-peligro', '¿Seguro?' );
+		}
+		return $h . '</div></article>';
+	}
 	if ( lp_puede_crear( $slug ) ) {
 		$h .= lp_boton_accion( $slug, $id, 'duplicar', 'Duplicar' );
 	}
